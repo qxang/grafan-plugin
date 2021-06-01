@@ -29,11 +29,11 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
     })
     useEffect(() => {
         if (!map.current) return; // wait for map to initialize
-        map.current.on('move', () => {
-            setLng(map.current.getCenter().lng.toFixed(4));
-            setLat(map.current.getCenter().lat.toFixed(4));
-            setZoom(map.current.getZoom().toFixed(2));
-        });
+        // map.current.on('move', () => {
+        //     setLng(map.current.getCenter().lng.toFixed(4));
+        //     setLat(map.current.getCenter().lat.toFixed(4));
+        //     setZoom(map.current.getZoom().toFixed(2));
+        // });
         
     });
     useEffect(()=>{
@@ -103,10 +103,18 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
         if (map.current.getSource(sourceID)){
             map.current.getSource(sourceID).setData(geojson);
             map.current.getSource(pointSourceId).setData(pointGeojson);
+            
+            if (Math.abs(bs_lat-lat)>=0.1 || Math.abs(bs_lon-lng)>=0.1){
+                let bounds =  new mapboxgl.LngLatBounds([bs_lon-0.01, bs_lat-0.01], [bs_lon+0.01, bs_lat+0.01]);
+                setLat(bs_lat.toFixed(4));
+                setLng(bs_lon.toFixed(4));
+                map.current.fitBounds(bounds, {
+                    padding: 20
+                });
+            }
         } else {
             map.current.on('load', ()=>{
-                console.log('loading')
-                console.log(geojson,pointGeojson)
+                console.log('初始化加载')
                 if (!map.current.getSource(sourceID)){
                     map.current.addSource(sourceID,{ 
                         type: 'geojson', 
@@ -165,9 +173,9 @@ export const MapboxPanel: React.FC<Props> = ({ options, data, width, height }) =
                             "symbol-spacing": 1,
                         }
                     });
-                    
-
                 }
+                setLat(bs_lat.toFixed(4))
+                setLng(bs_lon.toFixed(4))
                 map.current.flyTo({
                     center: [bs_lon,bs_lat],
                     speed: 0.5
